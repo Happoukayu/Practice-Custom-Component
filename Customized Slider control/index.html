@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Customized Slider control</title>
+        <style>
+            h1 {
+                text-align: center;
+            }
+        </style>
+        <style>
+            .slider {
+                position: relative;
+                margin: 0 auto;
+                padding: 20px 0;
+                width: 300px;
+            }
+
+            .track {
+                width: 100%;
+                height: 4px;
+                background-color: #ccc;
+            }
+
+            .progress {
+                width: 100%;
+                height: 100%;
+                background-color: tomato;
+                transform-origin: 0;
+            }
+
+            .thumb {
+                width: 15px;
+                height: 15px;
+                background-color: tomato;
+                position: absolute;
+                border-radius: 50px;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                user-select: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>自定义滑条</h1>
+        <div class="slider">
+            <div class="track">
+                <div class="progress" style="transform: scaleX(0);"></div>
+            </div>
+            <div class="thumb"></div>
+        </div>
+        <script>
+            var log = console.log.bind(console)
+            var sliderControl = function (element, options) {
+                // elements
+                var slider = element.slider
+                var progress = element.progress
+                var thumb = element.thumb
+                // value
+                options = options || {}
+                var max = options.max || 100
+                var min = options.min || 0
+                var step = options.step || 1
+                var value = options.value || min
+                var range = max - min
+                // state
+                var dragging = false
+                // update
+                var percentage = function (event) {
+                    var width = slider.offsetWidth
+                    var left = slider.offsetLeft
+                    var x = event.clientX
+                    var n = (x - left) / width
+                    if (n > 1) {
+                        return 100
+                    }
+                    if (n <= 0) {
+                        return 0
+                    }
+                    return Math.round(n * step * 100) / step
+                }
+                var transform = function (percentage) {
+                    var n = percentage / 100
+                    var width = slider.offsetWidth
+                    var fix = 'translate(-50%, -50%) '
+                    progress.style.transform = `scaleX(${n})`
+                    thumb.style.transform = `${fix} translateX(${n * width}px)`
+                }
+                var sliderMove = function (event) {
+                    var n = percentage(event)
+                    transform(n)
+                    value = range * n + min
+                }
+                var addTransition = function () {
+                    progress.style.transition = '0.3s'
+                    thumb.style.transition = '0.3s'
+                }
+                var removeTransition = function () {
+                    progress.style.transition = 'none'
+                    thumb.style.transition = 'none'
+                }
+                // events
+                var dragstart = function () {
+                    dragging = true
+                    removeTransition()
+                }
+                var drag = function (event) {
+                    if (dragging) {
+                        sliderMove(event)
+                    }
+                }
+                var dragend = function () {
+                    dragging = false
+                    addTransition()
+                }
+                var click = function (event) {
+                    if (!dragging) {
+                        sliderMove(event)
+                    }
+                }
+                var bindEvents = function () {
+                    thumb.addEventListener('mousedown', dragstart)
+                    document.addEventListener('mousemove', drag)
+                    document.addEventListener('mouseup', dragend)
+                    slider.addEventListener('mousedown', click)
+                }
+                var init = function () {
+                    bindEvents()
+                    transform(value / range)
+                    addTransition()
+                }
+                init()
+                return {
+                    get value() {
+                        return value
+                    },
+                    set value(v) {
+                        if (value != v) {
+                            value = v
+                            transform(v / range)
+                        }
+                    }
+                }
+            }
+            var __main = function () {
+                var e = sel => document.querySelector(sel)
+                var elements = {
+                    slider: e('.slider'),
+                    progress: e('.progress'),
+                    thumb: e('.thumb')
+                }
+                sliderControl(elements)
+            }
+            __main()
+        </script>
+        <script>
+
+        </script>
+    </body>
+
+</html>
